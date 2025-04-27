@@ -1,0 +1,14 @@
+[package]
+name = "capbot"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Discord
+serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "cache", "http"] }
+tokio = { version = "1.34", features = ["macros", "rt-multi-thread"] }
+dotenvy = "0.15"
+
+# HTTP Server
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false } 
+axum = "0.8"

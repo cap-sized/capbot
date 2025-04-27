@@ -1,0 +1,3 @@
+capbot/target/*
+*.lock
+*.env
