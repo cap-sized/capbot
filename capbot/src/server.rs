@@ -25,9 +25,19 @@ pub async fn run_server(
 
     println!("Capbot HTTP server listening on {}", listen_addr);
 
-    let listener: tokio::net::TcpListener =
-        tokio::net::TcpListener::bind(listen_addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let listener: tokio::net::TcpListener = match tokio::net::TcpListener::bind(listen_addr).await {
+        Ok(listener) => listener,
+        Err(e) => {
+            eprintln!("Failed to bind to address: {}\nError: {}", listen_addr, e);
+            return;
+        }
+    };
+
+    if let Err(e) = axum::serve(listener, app.into_make_service()).await {
+        eprintln!("Capbot Server error: {}", e);
+    } else {
+        println!("Capbot shut down gracefully.");
+    }
 }
 
 async fn handle_recon_post(
