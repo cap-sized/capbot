@@ -5,7 +5,7 @@ use serenity::async_trait;
 use std::env;
 use std::sync::Arc;
 
-use super::commands;
+use super::controls;
 
 // Shared client
 pub struct Handler {
@@ -30,8 +30,7 @@ impl EventHandler for Handler {
 
             // Command dispatcher
             let command_result: Result<(), serenity::Error> = match cmd.to_lowercase().as_str() {
-                "help" => commands::help::handle(&ctx, &msg, &args).await,
-                "view" => commands::view::handle(&ctx, &msg, &args, &self.reqwest_client).await,
+                "help" => controls::help::handle(&ctx, &msg, &args).await,
                 _ => {
                     // DEBUG
                     msg.reply(&ctx.http, format!("Unknown command: `{}`", cmd))
