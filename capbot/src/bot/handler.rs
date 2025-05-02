@@ -1,16 +1,11 @@
-use reqwest::Client as ReqwestClient;
 use serenity::all::{ChannelId, Context, EventHandler, Message, Ready};
 use serenity::async_trait;
 
 use std::env;
-use std::sync::Arc;
-
 use super::controls;
 
 // Shared client
-pub struct Handler {
-    pub reqwest_client: Arc<ReqwestClient>,
-}
+pub struct Handler;
 
 const COMMAND_PREFIX: &str = ".";
 
