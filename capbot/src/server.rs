@@ -19,6 +19,8 @@ pub async fn run_server(
         bad_data_channel_id: target_channel_id,
     };
 
+    // TODO: Route to /recon, /alert
+    // 
     let app: Router = Router::new()
         .route("/capbot", post(handle_recon_post))
         .with_state(shared_state);
@@ -48,7 +50,7 @@ async fn handle_recon_post(
 
     match state
         .bad_data_channel_id
-        .say(&state.discord_http, format!("Bad data: {}", body))
+        .say(&state.discord_http, format!("POST data from: {}", body))
         .await
     {
         Ok(_) => {
