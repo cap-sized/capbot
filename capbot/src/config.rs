@@ -12,10 +12,9 @@ impl Config {
     pub fn load() -> Self {
         dotenvy::dotenv().expect("Failed to load .env file");
 
-        let discord_token = env::var("DISCORD_TOKEN").expect("Missing DISCORD_TOKEN");
+        let discord_token= env::var("CAPBOT_TOKEN").expect("Missing CAPBOT_TOKEN");
+        let bad_data_channel_id_str= env::var("CAPSIZED_CHANNEL_ID").expect("Error reading CAPSIZED_CHANNEL_ID from .env");
 
-        let bad_data_channel_id_str: String =
-            env::var("BAD_DATA_CHANNEL_ID").expect("Error reading BAD_DATA_CHANNEL_ID from .env");
         let bad_data_channel_id: ChannelId = ChannelId::new(
             bad_data_channel_id_str
                 .parse::<u64>()

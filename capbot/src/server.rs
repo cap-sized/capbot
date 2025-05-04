@@ -1,12 +1,15 @@
-use axum::{Router, extract::State, http::StatusCode, routing::post};
+use axum::{Router, routing::post};
 use serenity::all::{ChannelId, Http};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use crate::bot::controls::level::handle_level_post;
+
+
 #[derive(Clone)]
-struct SharedBotState {
-    discord_http: Arc<Http>,
-    bad_data_channel_id: ChannelId,
+pub struct SharedBotState {
+    pub discord_http: Arc<Http>,
+    pub devlog_channel_id: ChannelId,
 }
 
 pub async fn run_server(
@@ -16,13 +19,11 @@ pub async fn run_server(
 ) {
     let shared_state: SharedBotState = SharedBotState {
         discord_http,
-        bad_data_channel_id: target_channel_id,
+        devlog_channel_id: target_channel_id,
     };
 
-    // TODO: Route to /recon, /alert
-    // 
     let app: Router = Router::new()
-        .route("/capbot", post(handle_recon_post))
+        .route("/level", post(handle_level_post))
         .with_state(shared_state);
 
     println!("Capbot HTTP server listening on {}", listen_addr);
@@ -39,30 +40,5 @@ pub async fn run_server(
         eprintln!("Capbot Server error: {}", e);
     } else {
         println!("Capbot shut down gracefully.");
-    }
-}
-
-async fn handle_recon_post(
-    State(state): State<SharedBotState>,
-    body: String,
-) -> Result<StatusCode, (StatusCode, String)> {
-    println!("Received POST request on /capbot with:\n{}", body);
-
-    match state
-        .bad_data_channel_id
-        .say(&state.discord_http, format!("POST data from: {}", body))
-        .await
-    {
-        Ok(_) => {
-            println!("Bad data message forwarded to bad data channel");
-            Ok(StatusCode::OK) // Return HTTP 200 OK
-        }
-        Err(e) => {
-            eprintln!("Failed to send bad data message {}", e);
-            Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to send bad data message {}", e),
-            ))
-        }
     }
 }

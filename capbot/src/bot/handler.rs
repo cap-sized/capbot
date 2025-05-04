@@ -1,63 +1,64 @@
-use serenity::all::{ChannelId, Context, EventHandler, Message, Ready};
+use crate::bot::controls;
+
 use serenity::async_trait;
-
+use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage};
+use serenity::model::application::Interaction;
+use serenity::model::gateway::Ready;
+use serenity::model::id::GuildId;
+use serenity::prelude::*;
 use std::env;
-use super::controls;
 
-// Shared client
 pub struct Handler;
-
-const COMMAND_PREFIX: &str = ".";
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.author.bot {
-            return;
-        }
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        if let Interaction::Command(command) = interaction {
+            // println!("Received command interaction: {command:#?}");
 
-        if let Some(content) = msg.content.strip_prefix(COMMAND_PREFIX) {
-            let parts: Vec<&str> = content.split_whitespace().collect();
-            let cmd: &str = parts.get(0).copied().unwrap_or("");
-            let args: &[&str] = parts.get(1..).unwrap_or(&[]);
-
-            println!("Received command: {} with args: {:?}", cmd, args);
-
-            // Command dispatcher
-            let command_result: Result<(), serenity::Error> = match cmd.to_lowercase().as_str() {
-                "help" => controls::help::handle(&ctx, &msg, &args).await,
-                _ => {
-                    // DEBUG
-                    msg.reply(&ctx.http, format!("Unknown command: `{}`", cmd))
-                        .await
-                        .ok();
-                    Ok(())
-                }
+            let content = match command.data.name.as_str() {
+                "ping" => Some(controls::ping::run(&command.data.options())),
+                "level" => Some(controls::level::run(&command.data.options())),
+                _ => Some("not implemented :(".to_string()),
             };
 
-            // Log any errors that occurred when running a command
-            if let Err(why) = command_result {
-                eprintln!("Error with command '{}': {:?}", cmd, why);
-                let _ = msg
-                    .reply(&ctx.http, format!("Invalid command: {}", msg.content))
-                    .await
-                    .ok();
+            if let Some(content) = content {
+                let data = CreateInteractionResponseMessage::new().content(content);
+                let builder = CreateInteractionResponse::Message(data);
+                if let Err(why) = command.create_response(&ctx.http, builder).await {
+                    println!("Cannot respond to slash command: {why}");
+                }
             }
         }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        let bad_data_channel_id_str: String =
-            env::var("BAD_DATA_CHANNEL_ID").expect("Error reading BAD_DATA_CHANNEL_ID from .env");
-        let bad_data_channel_id: ChannelId = ChannelId::new(
-            bad_data_channel_id_str
-                .parse::<u64>()
-                .expect("BAD_DATA_CHANNEL_ID must be an integer"),
-        );
-        bad_data_channel_id
-            .say(&ctx.http, "Hi I am capbot. Use `.` for command prefixes")
-            .await
-            .ok();
         println!("{} is connected!", ready.user.name);
+
+        let guild_id = GuildId::new(
+            env::var("CAPSIZED_GUILD_ID")
+                .expect("Expected GUILD_ID in environment")
+                .parse()
+                .expect("GUILD_ID must be an integer"),
+        );
+
+        let commands = guild_id
+            .set_commands(&ctx.http, vec![
+                controls::ping::register(),
+                controls::level::register(),
+                // controls::welcome::register(),
+                // controls::numberinput::register(),
+                // controls::attachmentinput::register(),
+                // controls::modal::register(),
+            ])
+            .await;
+
+        println!("I now have the following guild slash commands: {commands:?}");
+
+        // let guild_command =
+        //     Command::create_global_command(&ctx.http, controls::wonderful_command::register())
+        //         .await;
+
+        // println!("I created the following global slash command: {guild_command:#?}");
     }
 }

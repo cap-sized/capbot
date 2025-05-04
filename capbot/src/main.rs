@@ -8,6 +8,7 @@ use std::sync::Arc;
 use bot::handler::Handler;
 use config::Config;
 
+
 #[tokio::main]
 async fn main() {
     // Load environment variables from .env file
