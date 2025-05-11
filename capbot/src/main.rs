@@ -10,8 +10,6 @@ use bot::{controls::level::LogLevel, handler::Handler};
 use config::Config;
 
 
-
-
 #[tokio::main]
 async fn main() {
     // Load environment variables from .env file

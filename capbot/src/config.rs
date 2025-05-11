@@ -1,13 +1,13 @@
-use serenity::all::ChannelId;
-use serenity::prelude::TypeMapKey;
+use serenity::all::{ChannelId, GuildId};
 use std::env;
 use std::net::SocketAddr;
 
 #[derive(Clone)]
 pub struct Config {
-    pub discord_token: String,
-    pub logging_channel_id: ChannelId,
-    pub listen_addr: SocketAddr,
+    pub discord_token: String,  // Secret token to run bot
+    pub logging_channel_id: ChannelId,  // Specific channel to send in logging details
+    pub listen_addr: SocketAddr,  // IP & Port which the http server binds to
+    pub guild_id: GuildId  //  Specific discord channel to bind slash commands to
 }
 
 impl Config {
@@ -28,10 +28,18 @@ impl Config {
             .parse::<SocketAddr>()
             .expect("HTTP_LISTEN_ADDR must be a valid socket address");
 
+        let guild_id = GuildId::new(
+            env::var("CAPSIZED_GUILD_ID")
+                .expect("Expected GUILD_ID in environment")
+                .parse()
+                .expect("GUILD_ID must be an integer"),
+        ); 
+
         Config {
             discord_token,
             logging_channel_id: bad_data_channel_id,
             listen_addr,
+            guild_id
         }
     }
 }

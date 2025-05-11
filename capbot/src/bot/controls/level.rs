@@ -37,18 +37,18 @@ pub struct LogLevel {
 impl LogLevel {
     pub fn new() -> Self {
         Self {
-            level: Arc::new(RwLock::new(LevelFilters::Warn)),
+            level: Arc::new(RwLock::new(LevelFilters::Info)),
         }
     }
 
     pub fn set_level(&self, level: LevelFilters) {
-        let mut lock = self.level.write().expect("Level RwLock poisoned");
-        *lock = level;
+        let mut guard = self.level.write().expect("Level RwLock poisoned");
+        *guard = level;
     }
 
     pub fn get_level(&self) -> LevelFilters {
-        let lock = self.level.read().expect("Level RwLock poisoned");
-        *lock
+        let guard = self.level.read().expect("Level RwLock poisoned");
+        *guard
     }
 }
 
@@ -87,7 +87,7 @@ pub async fn handle_level_post(
 
 pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> String {
     let data_read = ctx.data.read().await;
-    let shared_state = data_read.get::<SharedBotState>().unwrap();
+    let shared_state = data_read.get::<SharedBotState>().unwrap().clone();
 
     if let Some(ResolvedOption {
         value: ResolvedValue::String(selected_level),

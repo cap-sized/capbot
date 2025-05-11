@@ -1,20 +1,28 @@
-// src/bot/controls/bot_status.rs
-use serenity::all::Context; // Renamed for clarity
+use std::sync::Arc;
+
+use crate::server::SharedBotState;
+use serenity::all::Context;
 use serenity::builder::CreateCommand;
-// We will get LevelGlobal via SharedBotState
-use crate::server::SharedBotState; // Import your SharedBotState
+
+pub fn generate_status_string(shared_state: &Arc<SharedBotState>) -> String {
+    let log_level = shared_state.log_level.get_level();
+    let listening_addr = shared_state.config.listen_addr;
+
+    format!(
+"## Current configuration variables:
+```
+Logging level: {log_level}
+Listening Address: {listening_addr}
+```"
+    )
+    .to_string()
+}
 
 pub async fn run(ctx: &Context) -> String {
-    let mut status_messages: Vec<String> = Vec::new();
-
     let data_read = ctx.data.read().await;
-    let shared_state = data_read.get::<SharedBotState>().unwrap();
-    
-    let current_level = shared_state.log_level.get_level();
-    status_messages.push(format!("Log Level: {}", current_level));
+    let shared_state = data_read.get::<SharedBotState>().unwrap().clone();
 
-    status_messages.join("\n")
-
+    generate_status_string(&shared_state)
 }
 
 pub fn register() -> CreateCommand {
