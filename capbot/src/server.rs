@@ -1,37 +1,52 @@
 use axum::{Router, routing::post};
-use serenity::all::{ChannelId, Http};
-use std::net::SocketAddr;
+use serenity::{
+    all::Http,
+    prelude::TypeMapKey,
+};
 use std::sync::Arc;
 
-use crate::bot::controls::level::handle_level_post;
 
+// use crate::bot::controls::level::{LogLevel, handle_level_post};
+use bot::controls::level::{LogLevel, handle_level_post};
+use config::Config;
 
+use crate::{bot, config};
+
+// Add more global variables here if needed
 #[derive(Clone)]
 pub struct SharedBotState {
     pub discord_http: Arc<Http>,
-    pub devlog_channel_id: ChannelId,
+    pub config: Config,
+    pub log_level: LogLevel,
 }
 
-pub async fn run_server(
-    discord_http: Arc<Http>,
-    target_channel_id: ChannelId,
-    listen_addr: SocketAddr,
-) {
-    let shared_state: SharedBotState = SharedBotState {
-        discord_http,
-        devlog_channel_id: target_channel_id,
-    };
+impl SharedBotState {
+    // Constructor for SharedBotState
+    pub fn new(discord_http: Arc<Http>, config: Config, log_level: LogLevel) -> Self {
+        Self {
+            discord_http,
+            config,
+            log_level,
+        }
+    }
+}
+
+impl TypeMapKey for SharedBotState {
+    type Value = Arc<SharedBotState>;
+}
+
+pub async fn run_server(shared_state: Arc<SharedBotState>) {
 
     let app: Router = Router::new()
         .route("/level", post(handle_level_post))
-        .with_state(shared_state);
+        .with_state((*shared_state).clone());
 
-    println!("Capbot HTTP server listening on {}", listen_addr);
+    println!("Capbot HTTP server listening on {}", shared_state.config.listen_addr);
 
-    let listener: tokio::net::TcpListener = match tokio::net::TcpListener::bind(listen_addr).await {
+    let listener: tokio::net::TcpListener = match tokio::net::TcpListener::bind(shared_state.config.listen_addr).await {
         Ok(listener) => listener,
         Err(e) => {
-            eprintln!("Failed to bind to address: {}\nError: {}", listen_addr, e);
+            eprintln!("Failed to bind to address: {}\nError: {}", shared_state.config.listen_addr, e);
             return;
         }
     };

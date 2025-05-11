@@ -6,3 +6,5 @@
 
 pub mod ping;
 pub mod level;
+
+pub mod bot_status;

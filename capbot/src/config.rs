@@ -1,10 +1,12 @@
 use serenity::all::ChannelId;
+use serenity::prelude::TypeMapKey;
 use std::env;
 use std::net::SocketAddr;
 
+#[derive(Clone)]
 pub struct Config {
     pub discord_token: String,
-    pub bad_data_channel_id: ChannelId,
+    pub logging_channel_id: ChannelId,
     pub listen_addr: SocketAddr,
 }
 
@@ -28,7 +30,7 @@ impl Config {
 
         Config {
             discord_token,
-            bad_data_channel_id,
+            logging_channel_id: bad_data_channel_id,
             listen_addr,
         }
     }

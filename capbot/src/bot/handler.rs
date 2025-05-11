@@ -8,6 +8,7 @@ use serenity::model::id::GuildId;
 use serenity::prelude::*;
 use std::env;
 
+
 pub struct Handler;
 
 #[async_trait]
@@ -18,7 +19,8 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "ping" => Some(controls::ping::run(&command.data.options())),
-                "level" => Some(controls::level::run(&command.data.options())),
+                "status" => Some(controls::bot_status::run(&ctx).await),
+                "level" => Some(controls::level::run(&ctx, &command.data.options()).await),
                 _ => Some("not implemented :(".to_string()),
             };
 
@@ -45,20 +47,12 @@ impl EventHandler for Handler {
         let commands = guild_id
             .set_commands(&ctx.http, vec![
                 controls::ping::register(),
+                controls::bot_status::register(),
                 controls::level::register(),
-                // controls::welcome::register(),
-                // controls::numberinput::register(),
-                // controls::attachmentinput::register(),
-                // controls::modal::register(),
+
             ])
             .await;
 
         println!("I now have the following guild slash commands: {commands:?}");
-
-        // let guild_command =
-        //     Command::create_global_command(&ctx.http, controls::wonderful_command::register())
-        //         .await;
-
-        // println!("I created the following global slash command: {guild_command:#?}");
     }
 }
